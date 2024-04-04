@@ -1,11 +1,12 @@
+//This is for saving songs to the database
 import mongoose from "mongoose";
 
 const Schema = mongoose.Schema;
 
 const songSchema = new Schema({
     title: String,
-    body: String,
-    author: String
+    album: String,
+    artist: String
 });
 
 const Song = mongoose.model('Song', songSchema);
