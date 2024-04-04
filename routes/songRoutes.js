@@ -88,7 +88,7 @@ routes.get('/:id', async (req, res) => {
         const song = await Song.findById(req.params.id);
 
         if (!song) {
-            return res.status(404).json({ message: 'Movie not found' });
+            return res.status(404).json({ message: 'Song not found' });
         }
         const songObject = song.toObject();
         const response = {
