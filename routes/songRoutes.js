@@ -4,6 +4,13 @@ import Song from "../models/Songs.js"
 
 const routes = express.Router();
 
+routes.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+
+    next();
+});
+
 const checkAcceptHeader = (req, res, next) => {
     const acceptHeader = req.get('Accept');
 
@@ -59,7 +66,7 @@ routes.get('/', checkAcceptHeader, async (req, res) => {
             return {
                 ...songObject,
                 _links: {
-                    self: { href: `${req.protocol}://${req.get('host')}/${song._id}` }
+                    self: { href: `${req.protocol}://${req.get('host')}/songs/${song._id}` }
                 }
             };
         });
@@ -67,14 +74,16 @@ routes.get('/', checkAcceptHeader, async (req, res) => {
         const response = {
             items: items,
             _links: {
-                self: { href: `${req.protocol}://${req.get('host')}/` }
+                self: { href: `${req.protocol}://${req.get('host')}/songs/` }
             },
             pagination: {
-                _links: {
-
-                }
+                temp: "pagination maken we later af"
             }
         };
+
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
         res.status(200).json(response);
     } catch (err) {
         console.error("Error fetching songs:", err);
@@ -90,17 +99,18 @@ routes.get('/:id', async (req, res) => {
         if (!song) {
             return res.status(404).json({ message: 'Song not found' });
         }
+
         const songObject = song.toObject();
         const response = {
             ...songObject,
             _links: {
-                self: { href: `${req.protocol}://${req.get('host')}/${song._id}` },
-                collection: { href: `${req.protocol}://${req.get('host')}/` }
+                self: { href: `${req.protocol}://${req.get('host')}/songs/${song._id}` },
+                collection: { href: `${req.protocol}://${req.get('host')}/songs/` }
             }
         };
+
         res.header('Access-Control-Allow-Origin', '*');
         res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
 
         res.json(response);
     } catch (error) {
@@ -109,23 +119,23 @@ routes.get('/:id', async (req, res) => {
     }
 });
 
-// POST method to seed the database with fake songs
-routes.post('/seed',async (req, res)=>{
-    if (req.body?.METHOD ==='SEED'){
-        console.log('Seed DB');
-        await Song.deleteMany({});
-        for (let i =0; i < 10;i++){
-            await Song.create({
-                title:faker.music.songName(),
-                album: faker.lorem.sentence({min:1, max:4}),
-                artist: faker.person.fullName()
-            })
-        }
-        res.json({ message: "Het werkt" })
-    }else{
-        res.status(400).json({ message: "Bad Request" })
-    }
-});
+// // POST method to seed the database with fake songs
+// routes.post('/seed',async (req, res)=>{
+//     if (req.body?.METHOD ==='SEED'){
+//         console.log('Seed DB');
+//         await Song.deleteMany({});
+//         for (let i =0; i < 10;i++){
+//             await Song.create({
+//                 title:faker.music.songName(),
+//                 album: faker.lorem.sentence({min:1, max:4}),
+//                 artist: faker.person.fullName()
+//             })
+//         }
+//         res.json({ message: "Het werkt" })
+//     }else{
+//         res.status(400).json({ message: "Bad Request" })
+//     }
+// });
 
 // POST method to save songs
 routes.post('/', checkContentTypeHeader, async (req, res) => {
@@ -142,6 +152,9 @@ routes.post('/', checkContentTypeHeader, async (req, res) => {
             artist,
         });
 
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
         res.status(201).json({
             message: 'Song created successfully',
             newSong: {
@@ -152,21 +165,6 @@ routes.post('/', checkContentTypeHeader, async (req, res) => {
         console.error(error);
         res.status(500).json({ message: 'Internal Server Error' });
     }
-});
-
-// OPTIONS method to allow different methods
-routes.options("/", (req, res) => {
-    // Specify allowed methods in the response header
-    res.header('Allow', 'GET, POST, OPTIONS');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.sendStatus(200);
-});
-
-// OPTIONS method for only one song
-routes.options("/:id", (req, res) => {
-    res.header('Allow', 'GET, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Methods', 'GET, PUT, DELETE, OPTIONS');
-    res.sendStatus(200);
 });
 
 // PUT method to update song data
@@ -185,13 +183,17 @@ routes.put('/:id', async (req, res) => {
         }
 
         const updatedSong = await Song.findByIdAndUpdate(req.params.id, req.body);
+
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
         res.status(200).json({
             message: 'Song updated successfully',
             updatedSong: {
                 ...updatedSong.toObject(),
                 _links: {
-                    self: {href: `${req.protocol}://${req.get('host')}/${updatedSong._id}`},
-                    collection: {href: `${req.protocol}://${req.get('host')}/`}
+                    self: {href: `${req.protocol}://${req.get('host')}/songs/${updatedSong._id}`},
+                    collection: {href: `${req.protocol}://${req.get('host')}/songs/`}
                 }
             }
         });
@@ -207,11 +209,30 @@ routes.delete('/:id', async (req, res) => {
         if (!song) {
             return res.status(404).json({ message: "Song not found" });
         }
+
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
         res.status(204).json("No Content");
     } catch (error) {
         res.status(500).json({ message: "Internal Server Error" });
     }
 })
+
+// OPTIONS method to allow different methods
+routes.options("/", (req, res) => {
+    // Specify allowed methods in the response header
+    res.header('Allow', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.sendStatus(200);
+});
+
+// OPTIONS method for only one song
+routes.options("/:id", (req, res) => {
+    res.header('Allow', 'GET, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Methods', 'GET, PUT, DELETE, OPTIONS');
+    res.sendStatus(200);
+});
 
 export default routes;
 

@@ -1,4 +1,4 @@
 {
-  "uri":"http://145.24.223.201:8000/",
+  "uri":"http://145.24.223.201:8000/songs",
   "description": "webservice met namen van liedjes"
 }
